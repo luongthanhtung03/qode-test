@@ -10,10 +10,9 @@ import {
   SendOutlined,
 } from "@ant-design/icons";
 import { Post } from "@/types";
+import { postService, commentService } from "@/services";
 
 const { Title, Text, Paragraph } = Typography;
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export default function PostDetailPage() {
   const params = useParams();
@@ -33,11 +32,7 @@ export default function PostDetailPage() {
     const fetchPost = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`${API_BASE_URL}/posts/${postId}`);
-        if (!response.ok) {
-          throw new Error("Failed to fetch post");
-        }
-        const data = await response.json();
+        const data = await postService.getById(postId);
         setPost(data);
       } catch (error) {
         console.error("Error fetching post:", error);
@@ -103,22 +98,10 @@ export default function PostDetailPage() {
 
     try {
       setSubmitting(true);
-      const response = await fetch(`${API_BASE_URL}/comments`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          content: newComment.trim(),
-          post_id: postId,
-        }),
+      const addedComment = await commentService.create({
+        content: newComment.trim(),
+        post_id: postId,
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to add comment");
-      }
-
-      const addedComment = await response.json();
       setPost({
         ...post,
         comments: [...post.comments, addedComment],
